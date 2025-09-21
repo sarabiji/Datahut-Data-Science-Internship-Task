@@ -30,7 +30,7 @@ def scrape_all_product_basics(url):
 
      # --- "Patient" Infinite Scroll Logic ---
      patience_counter = 0
-     max_patience = 3 # We will try 3 times before giving up so as to get to the end of the page
+     max_patience = 7 # We will try 7 times before giving up so as to get to the end of the page
 
      while patience_counter < max_patience:
         # Get the current number of products

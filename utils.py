@@ -4,7 +4,7 @@ import pandas as pd
 
 # --- Shared Constants ---
 DB_NAME = 'puma_products.db'
-CSV_FILENAME = "puma_complete_dataset.csv"
+CSV_FILENAME = "final_dataset.csv"
 
 USER_AGENTS = [
     'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/118.0.0.0 Safari/537.36',
@@ -67,7 +67,7 @@ def update_product_details_in_db(url, details):
     cursor = conn.cursor()
     cursor.execute('''
         UPDATE products 
-        SET "Description" = ?, "Sizes" = ?, "Rating" = ?
+        SET "Description" = ?, "Sizes" = ?
         WHERE "Product URL" = ?
     ''', (details['description'], details['sizes'], url))
     conn.commit()
