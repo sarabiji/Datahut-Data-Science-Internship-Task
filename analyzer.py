@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import numpy as np
 
-def analyze_puma_data(input_file="puma_complete_dataset.csv"):
+def analyze_puma_data(input_file="final_dataset.csv"):
     """
     Analyzes and visualizes the scraped Puma product data.
     """

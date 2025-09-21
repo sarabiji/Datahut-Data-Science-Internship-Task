@@ -1,5 +1,5 @@
  # Datahut-Data-Science-Internship-Task
-<!--
+
 ## Puma Women's Footwear Scraper
 
 ### Objective
@@ -21,7 +21,6 @@ The process was divided into two main phases:
 2.  **Phase 2**: The script then scraped the details (description, sizes, ratings) by visiting each product URL saved in the database. To significantly speed up this process, this phase was implemented with **multithreading**, allowing multiple pages to be scraped concurrently.
 
 ---
-
 
 ## How to Run
 
@@ -74,5 +73,3 @@ The process was divided into two main phases:
 * The scraper's success is dependent on the current HTML structure and class names of the Puma website, which are subject to change.
 * The `x-pum-` headers used to bypass anti-scraping measures might be temporary or session-based and could require updating for future runs.
 * The ratings and reviews are not available for all products.
-
-Would you like me to help you write a "How to Run" section for your `README.md` file, explaining the prerequisites and how to execute the script? -->

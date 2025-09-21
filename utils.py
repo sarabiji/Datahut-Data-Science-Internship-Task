@@ -21,7 +21,7 @@ def setup_database():
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS products (
             "Product URL" TEXT PRIMARY KEY, "Product Name" TEXT, "Image URL" TEXT,
-            "Discounted Price" TEXT, "Full Price" TEXT, "Description" TEXT, 
+            "Discounted Price" TEXT, "Full Price" TEXT, "Discount %" TEXT,"Description" TEXT, 
             "Sizes" TEXT
         )
     ''')
@@ -35,14 +35,14 @@ def save_product_to_db(product_data):
     cursor = conn.cursor()
     cursor.execute('''
         INSERT OR IGNORE INTO products ("Product URL", "Product Name", "Image URL", "Discounted Price", "Full Price","Discount %") 
-        VALUES (?, ?, ?, ?, ?)
+        VALUES (?, ?, ?, ?, ?, ?)
     ''', (
         product_data.get('Product URL'),
         product_data.get('Product Name'),
         product_data.get('Image URL'),
         product_data.get('Discounted Price'),
         product_data.get('Full Price'),
-        product_data.get('Discount %', '0%')
+        product_data.get('Discount %')
     ))
     conn.commit()
     conn.close()
