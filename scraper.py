@@ -11,9 +11,9 @@ if __name__ == '__main__':
     phase1_scraper.scrape_all_product_basics(phase1_scraper.URL)
     
     # 3. Run Phase 2 to get the details for each product
-    phase2_scraper.scrape_and_update_all_details_fast()
-    
-    # 4. Export the final, complete dataset to a CSV file
-    utils.export_db_to_csv()
+    phase2_scraper.scrape_all_details_sequentially()
+
+    # 4. Clean the scraped data and export the final dataset
+    utils.clean_data_and_export_to_csv()
     
     print("\nScraping process finished!")

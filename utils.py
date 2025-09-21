@@ -34,14 +34,15 @@ def save_product_to_db(product_data):
     conn = sqlite3.connect(DB_NAME)
     cursor = conn.cursor()
     cursor.execute('''
-        INSERT OR IGNORE INTO products ("Product URL", "Product Name", "Image URL", "Discounted Price", "Full Price") 
+        INSERT OR IGNORE INTO products ("Product URL", "Product Name", "Image URL", "Discounted Price", "Full Price","Discount %") 
         VALUES (?, ?, ?, ?, ?)
     ''', (
         product_data.get('Product URL'),
         product_data.get('Product Name'),
         product_data.get('Image URL'),
         product_data.get('Discounted Price'),
-        product_data.get('Full Price')
+        product_data.get('Full Price'),
+        product_data.get('Discount %', '0%')
     ))
     conn.commit()
     conn.close()
@@ -65,18 +66,30 @@ def update_product_details_in_db(url, details):
     """Updates a product row with the scraped description and sizes."""
     conn = sqlite3.connect(DB_NAME)
     cursor = conn.cursor()
+    sizes_as_string = str(details['sizes'])
     cursor.execute('''
         UPDATE products 
         SET "Description" = ?, "Sizes" = ?
         WHERE "Product URL" = ?
-    ''', (details['description'], details['sizes'], url))
+    ''', (details['description'], sizes_as_string, url))
     conn.commit()
     conn.close()
 
-def export_db_to_csv():
-    """Exports the final data from the database to a CSV file."""
+def clean_data_and_export_to_csv():
+    """
+    Reads data from the database, cleans it, and exports the final
+    clean dataset to a CSV file.
+    """
+    print("\n--- Starting Data Cleaning and Preparation ---")
     conn = sqlite3.connect(DB_NAME)
     df = pd.read_sql_query("SELECT * FROM products", conn)
     conn.close()
+
+    # Clean price columns
+    for col in ['Full Price', 'Discounted Price']:
+        df[col] = df[col].astype(str).str.replace('₹', '').str.replace(',', '', regex=False)
+        df[col] = pd.to_numeric(df[col], errors='coerce')
+
+    # Save the cleaned DataFrame to CSV
     df.to_csv(CSV_FILENAME, index=False)
-    print(f"\nSuccessfully exported {len(df)} products to {CSV_FILENAME}")
+    print(f"Successfully exported {len(df)} cleaned products to {CSV_FILENAME}")

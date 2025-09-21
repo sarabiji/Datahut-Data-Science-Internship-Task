@@ -76,13 +76,15 @@ def scrape_all_product_basics(url):
         name_tag = card.find("h3")
         sale_price_tag = card.find("span", attrs={"data-test-id": "sale-price"})
         full_price_tag = card.find("span", attrs={"data-test-id": "price"})
+        discount_badge = card.find("span", attrs={"data-test-id": "product-badge-sale"})
         
         product_info = {
             'Product URL': product_url,
             'Product Name': name_tag.text.strip() if name_tag else 'N/A',
             'Image URL': (card.find("img") or {}).get('src'),
             'Discounted Price': sale_price_tag.text.strip() if sale_price_tag else 'N/A',
-            'Full Price': full_price_tag.text.strip() if full_price_tag else 'N/A'
+            'Full Price': full_price_tag.text.strip() if full_price_tag else 'N/A',
+            'Discount %': discount_badge.text.strip() if discount_badge else '0%'
         }
 
         utils.save_product_to_db(product_info)

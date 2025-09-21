@@ -1,70 +1,82 @@
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
+import numpy as np
 
-# def analyze_and_visualize(input_file="puma.csv"):
+def analyze_puma_data(input_file="puma_complete_dataset.csv"):
+    """
+    Analyzes and visualizes the scraped Puma product data.
+    """
+    df = pd.read_csv(input_file)
+
+    # --- 1. Data Cleaning and Preparation ---
+    print("--- Cleaning Data ---")
     
-#     df = pd.read_csv(input_file)
+    # Clean price columns by removing currency symbols and commas, then convert to numbers
+    for col in ['Full Price', 'Discounted Price']:
+        df[col] = df[col].astype(str).str.replace('₹', '').str.replace(',', '', regex=False)
+        # Coerce errors will turn non-numeric values into NaN (Not a Number)
+        df[col] = pd.to_numeric(df[col], errors='coerce')
 
-#     sns.set_style("whitegrid")
-#     plt.figure(figsize=(12, 7))
+    # Convert Rating and Review Count to numeric, handling 'N/A'
+    df['Rating'] = pd.to_numeric(df['Rating'], errors='coerce')
+    df['Review Count'] = pd.to_numeric(df['Review Count'], errors='coerce')
 
-#     print(df[['MRP', 'SalePrice', 'DiscountPercentage', 'Rating', 'NumberOfReviews']].describe())
-#     print("\n" + "="*50 + "\n")
-
+    # Calculate Discount Percentage, handling cases where Full Price is 0 or NaN
+    df['DiscountPercentage'] = 100 * (df['Full Price'] - df['Discounted Price']) / df['Full Price']
+    # Fill any resulting NaN/inf values with 0
+    df['DiscountPercentage'] = df['DiscountPercentage'].replace([np.inf, -np.inf], np.nan).fillna(0)
     
-#     top_5_brands_by_count = df['Brand'].value_counts().head(5)
-#     print(top_5_brands_by_count)
-#     print("\n" + "="*50 + "\n")
+    # Drop rows where prices are missing after cleaning
+    df.dropna(subset=['Full Price', 'Discounted Price'], inplace=True)
 
-#     top_5_brands_by_discount = df.groupby('Brand')['DiscountPercentage'].mean().sort_values(ascending=False).head(5)
-#     print(top_5_brands_by_discount)
-#     print("\n" + "="*50 + "\n")
-
-
-#     # Histogram – Distribution of product prices (Sale Price)
-#     plt.subplot(2, 2, 1)
-#     sns.histplot(df['SalePrice'], bins=50, kde=True, color='skyblue')
-#     plt.title('Distribution of Product Sale Prices')
-#     plt.xlabel('Sale Price (Rs.)')
-#     plt.ylabel('Frequency')
-#     plt.xlim(0, df['SalePrice'].quantile(0.95)) # Trim outliers for better visualization
-
-#     # Bar chart – Average discount percentage by top brands
-#     plt.subplot(2, 2, 2)
-#     avg_discount_brands = df.groupby('Brand')['DiscountPercentage'].mean().nlargest(10).sort_values()
-#     avg_discount_brands.plot(kind='barh', color='salmon')
-#     plt.title('Top 10 Brands by Average Discount %')
-#     plt.xlabel('Average Discount Percentage (%)')
-#     plt.ylabel('Brand')
-
-#     # Box plot – Price distribution of top 5 brands by product count
-#     plt.subplot(2, 2, 3)
-#     top_brands_list = top_5_brands_by_count.index.tolist()
-#     filtered_df_brands = df[df['Brand'].isin(top_brands_list)]
-#     sns.boxplot(x='SalePrice', y='Brand', data=filtered_df_brands, palette='pastel')
-#     plt.title('Price Distribution of Top 5 Brands')
-#     plt.xlabel('Sale Price (Rs.)')
-#     plt.ylabel('Brand')
-#     plt.xlim(0, df['SalePrice'].quantile(0.90)) # Trim outliers
-
-#     # Scatter plot – Ratings vs Discount Percentage
-#     plt.subplot(2, 2, 4)
-#     # Filter out products with 0 ratings as they are unrated
-#     rated_products = df[df['Rating'] > 0]
-#     sns.scatterplot(x='DiscountPercentage', y='Rating', data=rated_products, alpha=0.6, color='purple')
-#     plt.title('Rating vs. Discount Percentage')
-#     plt.xlabel('Discount Percentage (%)')
-#     plt.ylabel('Rating (1-5)')
-
-#     plt.tight_layout()
-#     plt.savefig("myntra_analysis_visuals.png")
-#     print("Visualizations saved to myntra_analysis_visuals.png")
-#     plt.show()
-
-
-
+    print("Data cleaning complete.\n")
     
+    # --- 2. Data Analysis ---
+    print("--- Descriptive Statistics ---")
+    print(df[['Full Price', 'Discounted Price', 'DiscountPercentage', 'Rating', 'Review Count']].describe())
+    print("\n" + "="*50 + "\n")
 
-# if __name__ == "__main__":
-#     analyze_and_visualize()
+    # --- 3. Visualization ---
+    sns.set_style("whitegrid")
+    plt.figure(figsize=(14, 10))
+    plt.suptitle("Puma Women's Footwear Analysis", fontsize=18, y=1.02)
+
+    # Plot 1: Distribution of Sale Prices
+    plt.subplot(2, 2, 1)
+    sns.histplot(df['Discounted Price'], bins=40, kde=True, color='skyblue')
+    plt.title('Distribution of Product Sale Prices')
+    plt.xlabel('Sale Price (₹)')
+    plt.ylabel('Frequency')
+
+    # Plot 2: Distribution of Discount Percentages
+    plt.subplot(2, 2, 2)
+    sns.histplot(df[df['DiscountPercentage'] > 0]['DiscountPercentage'], bins=40, kde=True, color='salmon')
+    plt.title('Distribution of Discounts')
+    plt.xlabel('Discount Percentage (%)')
+    plt.ylabel('Frequency')
+
+    # Plot 3: Price Distribution (Box Plot)
+    plt.subplot(2, 2, 3)
+    sns.boxplot(x=df['Discounted Price'], palette='pastel')
+    plt.title('Overall Price Distribution')
+    plt.xlabel('Sale Price (₹)')
+
+    # Plot 4: Ratings vs. Discount Percentage
+    plt.subplot(2, 2, 4)
+    rated_products = df[df['Rating'] > 0]
+    if not rated_products.empty:
+        sns.scatterplot(x='DiscountPercentage', y='Rating', data=rated_products, alpha=0.6, color='purple')
+        plt.title('Rating vs. Discount Percentage')
+    else:
+        plt.title('No Rated Products Found')
+    plt.xlabel('Discount Percentage (%)')
+    plt.ylabel('Rating (if available)')
+
+    plt.tight_layout(rect=[0, 0, 1, 0.98])
+    plt.savefig("puma_analysis_visuals.png")
+    print("Visualizations saved to puma_analysis_visuals.png")
+    plt.show()
+
+if __name__ == "__main__":
+    analyze_puma_data()

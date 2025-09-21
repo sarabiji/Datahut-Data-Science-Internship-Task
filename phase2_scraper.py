@@ -1,80 +1,142 @@
-import requests
+from selenium import webdriver
+from selenium.webdriver.common.by import By
 from bs4 import BeautifulSoup
-import json
 import time
+import utils
 import random
-from concurrent.futures import ThreadPoolExecutor
-import utils 
 
-MAX_WORKERS = 10 # Number of pages to scrape at the same time (multithreading)
-
-def scrape_product_details(url):
-    """Visits a single product page (URL) to scrape its details."""
+# def scrape_product_details_with_selenium(url):
+#     """Visits a single product page using Selenium to scrape its details."""
     
-    # (The top part with delays, headers, etc. remains the same)
-    time.sleep(random.uniform(1.5, 4.0))
-    headers = {'User-Agent': random.choice(utils.USER_AGENTS)}
+#     print(f"   -> Scraping with browser: {url}")
+#     # Use the same stealth options from Phase 1
+#     options = webdriver.ChromeOptions()
+#     options.add_argument("--headless")
+#     options.add_argument("user-agent=" + random.choice(utils.USER_AGENTS))
+#     options.add_argument('--disable-blink-features=AutomationControlled')
+    
+#     driver = webdriver.Chrome(options=options)
+    
+#     details = {'description': 'Not Found', 'sizes': 'Not Found'}
 
-    try:
-        response = requests.get(url, headers=headers, timeout=20)
-        if response.status_code != 200:
-            print(f"   -> Blocked or Page Not Found. Status Code: {response.status_code} for {url}")
-            return url, None
-
-        soup = BeautifulSoup(response.content, 'html.parser')
-        details = {'description': 'Not Found', 'sizes': 'Not Found', 'rating': 'N/A', 'review_count': 0}
-
-        desc_container = soup.select_one('div[data-test-id="pdp-product-description"]')
-        if desc_container:
-            # Find the text container inside the main description div
-            desc_text_div = desc_container.select_one('div.tw-xwzea6')
-            if desc_text_div:
-                details['description'] = desc_text_div.get_text(separator=' ', strip=True)
+#     try:
+#         driver.get(url)
+#         # Give the page a moment to load all dynamic content
+#         time.sleep(3) 
         
-        size_spans = soup.select('span[data-content="size-value"]')
-        if size_spans:
-            sizes = [s.get_text(strip=True) for s in size_spans]
-            details['sizes'] = ", ".join(sizes)
+#         soup = BeautifulSoup(driver.page_source, 'html.parser')
+
+#         # Scrape Description
+#         desc_container = soup.select_one('div[data-test-id="pdp-product-description"]')
+#         if desc_container:
+#             desc_text_div = desc_container.select_one('div.tw-xwzea6')
+#             if desc_text_div:
+#                 details['description'] = desc_text_div.get_text(separator=' ', strip=True)
+
+#         # Scrape Sizes
+#         size_spans = soup.select('span[data-content="size-value"]')
+#         if size_spans:
+#             sizes = [s.get_text(strip=True) for s in size_spans]
+#             details['sizes'] = tuple(sizes)
         
+#         return url, details
 
-        script_tag = soup.find('script', type='application/ld+json')
-        if script_tag and script_tag.string:
-            data = json.loads(script_tag.string)
-            if 'aggregateRating' in data:
-                details['rating'] = data['aggregateRating'].get('ratingValue', 'N/A')
-                details['review_count'] = data['aggregateRating'].get('reviewCount', 0)
+#     except Exception as e:
+#         print(f"   -> An error occurred for {url}: {e}")
+#         return url, None
+#     finally:
+#         # Make sure to close the browser instance
+#         driver.quit()
+
+
+# def scrape_all_details_sequentially():
+#     """PHASE 2 (Sequential): Scrapes and updates details one by one."""
+#     print("\n--- PHASE 2: Scraping Product Details (Reliably) ---")
+#     urls_to_scrape = utils.get_products_needing_details()
+#     total = len(urls_to_scrape)
+    
+#     if total == 0:
+#         print("No new product details to scrape. All data is up to date.")
+#         return
         
-        return url, details
+#     print(f"Found {total} products needing details. Starting scrape...")
+    
+#     for i, url in enumerate(urls_to_scrape):
+#         progress = f"[{i+1}/{total}]"
+#         url, details = scrape_product_details_with_selenium(url)
+#         if details:
+#             utils.update_product_details_in_db(url, details)
+#             print(f"{progress} Success: Details updated.")
+#         else:
+#             print(f"{progress} Failed: Could not get details.")
 
-    except Exception as e:
-        print(f"   -> An unexpected error occurred for {url}: {e}")
-        return url, None
+#     print("\n--- PHASE 2 Complete ---")
 
-def scrape_and_update_all_details_fast():
-    """PHASE 2 (Multithreaded): Scrapes and updates details concurrently."""
-    print("\n--- PHASE 2: Scraping Product Details (Multithreaded) ---")
+# # phase2_scraper.py
+# from selenium import webdriver
+# from selenium.webdriver.common.by import By
+# from bs4 import BeautifulSoup
+# import time
+# import utils
+# import random
+
+def scrape_all_details_sequentially():
+    """
+    PHASE 2 : Scrapes details for all products using a single,
+    persistent browser session to improve speed.
+    """
+    print("\n--- PHASE 2: Scraping Product Details ---")
     urls_to_scrape = utils.get_products_needing_details()
     total = len(urls_to_scrape)
-    
+
     if total == 0:
         print("No new product details to scrape. All data is up to date.")
         return
         
-    print(f"Found {total} products needing details. Starting fast scrape...")
-    
-    with ThreadPoolExecutor(max_workers=MAX_WORKERS) as executor:
-        # The executor.map function runs scrape_product_details on all URLs in parallel
-        results = executor.map(scrape_product_details, urls_to_scrape)
-        
-        # Process results as they are completed
-        for i, result in enumerate(results):
-            print(f"Processing result {i+1}/{total}")
-            url, details = result
-            if details:
+    print(f"Found {total} products needing details. Initializing browser...")
+
+    # --- 1. Initialize Browser Once ---
+    options = webdriver.ChromeOptions()
+    options.add_argument("--headless")
+    options.add_argument("user-agent=" + random.choice(utils.USER_AGENTS))
+    options.add_argument('--disable-blink-features=AutomationControlled')
+    driver = webdriver.Chrome(options=options)
+
+    try:
+        # --- 2. Loop Through All URLs ---
+        for i, url in enumerate(urls_to_scrape):
+            progress = f"[{i+1}/{total}]"
+            details = {'description': 'Not Found', 'sizes': 'Not Found'}
+
+            try:
+                driver.get(url)
+                time.sleep(2) 
+                
+                soup = BeautifulSoup(driver.page_source, 'html.parser')
+
+                # Scrape Description
+                desc_container = soup.select_one('div[data-test-id="pdp-product-description"]')
+                if desc_container:
+                    desc_text_div = desc_container.select_one('div.tw-xwzea6')
+                    if desc_text_div:
+                        details['description'] = desc_text_div.get_text(separator=' ', strip=True)
+
+                # Scrape Sizes
+                size_spans = soup.select('span[data-content="size-value"]')
+                if size_spans:
+                    sizes_list = [s.get_text(strip=True) for s in size_spans]
+                    details['sizes'] = tuple(sizes_list)
+
+                # Update the database
                 utils.update_product_details_in_db(url, details)
-                print(f"[{i+1}/{total}] Success: Updated details for {url}")
-            else:
-                print(f"[{i+1}/{total}] Failed: Could not get details for {url}")
+                print(f"{progress} Success: Details updated for {url}")
+
+            except Exception as e:
+                print(f"{progress} Failed for {url}: {e}")
+                
+    finally:
+        driver.quit()
+        print("\nBrowser closed.")
 
     print("\n--- PHASE 2 Complete ---")
 
