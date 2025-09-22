@@ -69,10 +69,6 @@ The scraper is built using Python and is modularized into several scripts for cl
 
     The script will create the database, run Phase 1 and Phase 2, clean the resulting data, and save the final, complete dataset as `final_dataset.csv`.
 
-----
-
-Of course. Adding the results of your analysis is the perfect way to conclude your project report. Here is a new "Analysis and Results" section that you can add to your `README.md` file. It includes both the statistics and the visualization you generated.
-
 -----
 
 ## Analysis and Results
