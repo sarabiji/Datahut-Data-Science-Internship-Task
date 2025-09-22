@@ -8,33 +8,12 @@ def analyze_puma_data(input_file="final_dataset.csv"):
     Analyzes and visualizes the scraped Puma product data.
     """
     df = pd.read_csv(input_file)
-
-    # --- 1. Data Cleaning and Preparation ---
-    print("--- Cleaning Data ---")
-    
-    # Clean price columns by removing currency symbols and commas, then convert to numbers
-    for col in ['Full Price', 'Discounted Price']:
-        # Ensure the column is treated as a string before using .str accessor
-        df[col] = df[col].astype(str).str.replace('₹', '', regex=False).str.replace(',', '', regex=False)
-        # Coerce errors will turn non-numeric values into NaN (Not a Number)
-        df[col] = pd.to_numeric(df[col], errors='coerce')
-
-    # Drop rows where prices are missing after cleaning, as they can't be analyzed
-    df.dropna(subset=['Full Price', 'Discounted Price'], inplace=True)
-
-    # Calculate Discount Percentage, handling cases where Full Price is 0 or NaN
-    df['DiscountPercentage'] = 100 * (df['Full Price'] - df['Discounted Price']) / df['Full Price']
-    # Fill any resulting NaN/inf values from division by zero with 0
-    df['DiscountPercentage'] = df['DiscountPercentage'].replace([np.inf, -np.inf], np.nan).fillna(0)
-    
-    print("Data cleaning complete.\n")
-    
-    # --- 2. Data Analysis ---
+    # --- 1. Descriptive Statistics ---
     print("--- Descriptive Statistics ---")
     print(df[['Full Price', 'Discounted Price', 'DiscountPercentage']].describe())
     print("\n" + "="*50 + "\n")
 
-    # --- 3. Visualization ---
+    # --- 2. Visualization ---
     sns.set_style("whitegrid")
     plt.figure(figsize=(14, 10))
     plt.suptitle("Puma Women's Footwear Analysis", fontsize=18, y=2)

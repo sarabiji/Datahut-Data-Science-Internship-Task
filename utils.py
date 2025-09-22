@@ -1,6 +1,7 @@
 # utils.py
 import sqlite3
 import pandas as pd
+import numpy as np
 
 # --- Shared Constants ---
 DB_NAME = 'puma_products.db'
@@ -81,15 +82,28 @@ def clean_data_and_export_to_csv():
     clean dataset to a CSV file.
     """
     print("\n--- Starting Data Cleaning and Preparation ---")
+
+    # 1. Load data from the database FIRST
     conn = sqlite3.connect(DB_NAME)
     df = pd.read_sql_query("SELECT * FROM products", conn)
     conn.close()
 
+    # 2. Now, perform the data cleaning on the loaded DataFrame
     # Clean price columns
     for col in ['Full Price', 'Discounted Price']:
-        df[col] = df[col].astype(str).str.replace('₹', '').str.replace(',', '', regex=False)
+        df[col] = df[col].astype(str).str.replace('₹', '', regex=False).str.replace(',', '', regex=False)
         df[col] = pd.to_numeric(df[col], errors='coerce')
 
-    # Save the cleaned DataFrame to CSV
+    # If a discounted price is missing, assume it's the same as the full price
+    df['Discounted Price'].fillna(df['Full Price'], inplace=True)
+
+    # Now, only drop rows where the 'Full Price' is still missing, as those are unusable
+    df.dropna(subset=['Full Price'], inplace=True)
+
+    # Calculate Discount Percentage
+    df['DiscountPercentage'] = 100 * (df['Full Price'] - df['Discounted Price']) / df['Full Price']
+    df['DiscountPercentage'] = df['DiscountPercentage'].replace([np.inf, -np.inf], np.nan).fillna(0)
+
+    # 3. Save the cleaned DataFrame to CSV
     df.to_csv(CSV_FILENAME, index=False)
     print(f"Successfully exported {len(df)} cleaned products to {CSV_FILENAME}")
