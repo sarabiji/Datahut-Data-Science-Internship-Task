@@ -44,13 +44,6 @@ The scraper is built using Python and is modularized into several scripts for cl
 
 -----
 
-### Limitations
-
-  * **Website Structure**: The scraper's success is dependent on the current HTML structure and `data-test-id` attributes of the Puma website, which are subject to change.
-  * **Missing Data**: Ratings and review counts are not displayed on the product pages and are therefore not included in the final dataset, as they are not provided by the source.
-
------
-
 ### How to Run
 
 1.  **Prerequisites**: Install the required Python libraries from your terminal.
@@ -73,34 +66,39 @@ The scraper is built using Python and is modularized into several scripts for cl
 
 ## Analysis and Results
 
-After scraping and cleaning the data, an analysis was performed to uncover insights into Puma's women's footwear offerings.
+After scraping and cleaning the data, an analysis was performed to uncover insights into Puma's women's footwear offerings on the Indian website.
 
-### Descriptive Statistics
+### Descriptive Statistics 
 
-The statistical summary of the key numerical columns reveals the following:
+The statistical summary of the 770 products analyzed reveals several key points:
+* **Pricing**: The average full price for a pair of shoes is approximately **₹8,372**, while the average sale price is **₹6,382**.
+* **Discounts**: The average discount is **24.5%**. Interestingly, the 25th percentile is 0%, which means at least a quarter of the items are not on sale.
+* **Range**: Prices range from a budget-friendly ₹999 up to a premium price of ₹24,999.
 
-  * **Count**: A total of 489 products were analyzed after cleaning.
-  * **Pricing**: The average full price is approximately ₹7,962, while the average discounted price is ₹4,782.
-  * **Discounts**: The average discount across all products is about 39.4%, with a maximum discount reaching 55%.
+Here is the detailed breakdown:
 
 | Statistic | Full Price | Discounted Price | Discount Percentage |
 | :--- | :--- | :--- | :--- |
-| **count** | 489.00 | 489.00 | 489.00 |
-| **mean** | 7961.99 | 4782.33 | 39.38 |
-| **std** | 4132.03 | 2481.78 | 9.90 |
-| **min** | 1399.00 | 979.00 | 10.00 |
-| **25%** | 4999.00 | 2999.00 | 35.00 |
-| **50%** | 6999.00 | 4219.00 | 40.01 |
-| **75%** | 9999.00 | 5999.00 | 47.01 |
-| **max** | 21999.00 | 17599.00 | 55.01 |
+| **count** | 770.00 | 770.00 | 770.00 |
+| **mean** | 8371.86 | 6382.43 | 24.54 |
+| **std** | 4213.63 | 3850.24 | 20.96 |
+| **min** | 999.00 | 699.00 | 0.00 |
+| **25%** | 5499.00 | 3599.00 | 0.00 |
+| **50%** | 7999.00 | 5599.00 | 30.01 |
+| **75%** | 9999.00 | 7999.00 | 45.01 |
+| **max** | 24999.00 | 24999.00 | 55.01 |
 
-### Visualizations
+
+
+### Visualizations 
 
 The `analyzer.py` script generates the following visual dashboard to summarize the findings:
 
-  * **Distribution of Sale Prices**: Most products are priced between ₹2,500 and ₹7,500.
-  * **Distribution of Discounts**: The most common discounts are clustered around 40% and 50%.
-  * **Overall Price Distribution**: The box plot confirms the price concentration in the lower range, with several high-priced outliers.
+* **Distribution of Sale Prices**: The histogram shows that most products are sold in the **₹3,000 to ₹8,000** price range.
+* **Distribution of Discounts**: For items that are on sale, the most common discounts are clustered around **40-50%**.
+* **Overall Price Distribution**: The box plot clearly shows the concentration of prices and identifies several high-priced outliers.
+
+![Puma Footwear Analysis](puma_analysis_visuals.png)
 
 ### Limitations
 
